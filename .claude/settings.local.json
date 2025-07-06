@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(PYTHONPATH=. python3 -c \"import whisper; print('✓ Whisper import successful'); print('Available models:', list(whisper.available_models()))\")",
+      "Bash(ls:*)",
+      "Bash(PYTHONPATH=.. python3 -c \"import whisper; print('✓ Whisper import successful'); print('Available models:', list(whisper.available_models()))\")"
+    ],
+    "deny": []
+  }
+}

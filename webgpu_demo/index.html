@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinygrad Whisper WebGPU Demo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Tinygrad Whisper WebGPU Demo</h1>
+        <p>Real-time speech transcription using tinygrad whisper with WebGPU acceleration</p>
+        
+        <div class="controls">
+            <button id="startBtn" class="btn primary">Start Recording</button>
+            <button id="stopBtn" class="btn secondary" disabled>Stop Recording</button>
+            <button id="uploadBtn" class="btn tertiary">Upload Audio File</button>
+            <input type="file" id="fileInput" accept="audio/*" style="display: none;">
+        </div>
+        
+        <div class="status">
+            <div id="backend-status" class="status-item">
+                <span class="label">Backend:</span>
+                <span class="status-text">Checking...</span>
+            </div>
+            <div id="webgpu-status" class="status-item">
+                <span class="label">WebGPU:</span>
+                <span id="webgpu-text" class="status-text">Checking...</span>
+            </div>
+            <div id="recording-status" class="status-item">
+                <span class="label">Recording:</span>
+                <span id="recording-text" class="status-text">Ready</span>
+            </div>
+            <div id="processing-status" class="status-item">
+                <span class="label">Processing:</span>
+                <span id="processing-text" class="status-text">Idle</span>
+            </div>
+        </div>
+        
+        <div class="audio-visualizer">
+            <canvas id="audioCanvas" width="800" height="200"></canvas>
+        </div>
+        
+        <div class="transcription">
+            <h3>Transcription:</h3>
+            <div id="transcriptionOutput" class="output">
+                Transcribed text will appear here...
+            </div>
+        </div>
+        
+        <div class="debug">
+            <h3>Debug Info:</h3>
+            <div id="debugOutput" class="output">
+                Debug information will appear here...
+            </div>
+        </div>
+    </div>
+    
+    <script src="webgpu.js"></script>
+    <script src="audio.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
