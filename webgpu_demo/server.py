@@ -58,10 +58,10 @@ else:
     try:
         import whisper
         WHISPER_AVAILABLE = True
-        print("✓ Tinygrad whisper imported successfully")
+        print("Tinygrad whisper imported successfully")
     except ImportError as e:
         WHISPER_AVAILABLE = False
-        print(f"✗ Failed to import whisper: {e}")
+        print("Failed to import whisper: {e}")
         # Check if tinygrad is available
         try:
             import tinygrad
@@ -106,7 +106,7 @@ def get_thread_local_encoding(model_name):
         
         tokenizer = get_tokenizer(multilingual, language=language)
         thread_local.encodings[model_name] = tokenizer
-        logger.info(f"✓ Thread-local whisper tokenizer loaded for {model_name} in thread {threading.current_thread().ident}")
+        logger.info(f"Thread-local whisper tokenizer loaded for {model_name} in thread {threading.current_thread().ident}")
         return tokenizer
         
     except Exception as e:
@@ -419,12 +419,12 @@ if __name__ == '__main__':
     print("=== Tinygrad Whisper WebGPU Demo Server ===")
     
     if missing_deps:
-        print("\nCannot start server due to missing dependencies.")
+        print("Cannot start server due to missing dependencies.")
         print("Please install the required packages and try again.")
         sys.exit(1)
     
     if not WHISPER_AVAILABLE:
-        print("\nCannot start server: Whisper not available.")
+        print("Cannot start server: Whisper not available.")
         sys.exit(1)
         
     if args.single_threaded:
@@ -446,8 +446,7 @@ if __name__ == '__main__':
     print(f"Server starting on http://{args.host}:{args.port}")
     print("Press Ctrl+C to stop")
     
-    if not args.single_threaded:
-        print("\n💡 If you experience SQLite threading errors, restart with --single-threaded")
+    print("If you experience SQLite threading errors, restart with --single-threaded")
     
     app.run(
         host=args.host,

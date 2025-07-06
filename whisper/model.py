@@ -91,19 +91,19 @@ class MultiHeadAttention:
 class ResidualAttentionBlock:
     def __init__(self, n_state, n_head, is_decoder_block=False, max_self_attn_cache_len=None):
         self.attn = MultiHeadAttention(n_state, n_head, kv_caching='self' if is_decoder_block else None, max_self_attn_cache_len=max_self_attn_cache_len)
-        self.attn_ln = nn.LayerNorm(n_state)
+        self.attn_ln = nn.LayerNorm(n_state, eps=1e-5)
 
         self.cross_attn = MultiHeadAttention(n_state, n_head, kv_caching='cross') if is_decoder_block else None
-        self.cross_attn_ln = nn.LayerNorm(n_state) if is_decoder_block else None
+        self.cross_attn_ln = nn.LayerNorm(n_state, eps=1e-5) if is_decoder_block else None
 
         self.mlp = [nn.Linear(n_state, n_state*4), Tensor.gelu, nn.Linear(n_state*4, n_state)]
-        self.mlp_ln = nn.LayerNorm(n_state)
+        self.mlp_ln = nn.LayerNorm(n_state, eps=1e-5)
 
     def __call__(self, x, xa=None, mask=None, len: Union[Variable, int]=None):
-        x = x + self.attn(self.attn_ln(x), mask=mask, len=len)
+        x = x + self.attn(self.attn_ln(x.float()), mask=mask, len=len)
         if self.cross_attn: 
-            x = x + self.cross_attn(self.cross_attn_ln(x), xa)
-        x = x + self.mlp_ln(x).sequential(self.mlp)
+            x = x + self.cross_attn(self.cross_attn_ln(x.float()), xa)
+        x = x + self.mlp_ln(x.float()).sequential(self.mlp)
         return x.realize()
 
 
@@ -112,7 +112,7 @@ class AudioEncoder:
         self.conv1 = nn.Conv1d(n_mels, n_audio_state, kernel_size=3, padding=1)
         self.conv2 = nn.Conv1d(n_audio_state, n_audio_state, kernel_size=3, stride=2, padding=1)
         self.blocks = [ResidualAttentionBlock(n_audio_state, n_audio_head) for _ in range(n_audio_layer)]
-        self.ln_post = nn.LayerNorm(n_audio_state)
+        self.ln_post = nn.LayerNorm(n_audio_state, eps=1e-5)
         
         # Initialize positional embedding with proper values
         self.positional_embedding = Tensor(sinusoids(n_audio_ctx, n_audio_state))
@@ -124,7 +124,7 @@ class AudioEncoder:
         x = x.permute(0, 2, 1)
         x = x + self.positional_embedding[:x.shape[1]]
         x = x.sequential(self.blocks)
-        x = self.ln_post(x)
+        x = self.ln_post(x.float())
         return x.realize()
 
 
@@ -152,7 +152,7 @@ class TextDecoder:
         return self.output_tok(x)
 
     def output_tok(self, x):
-        return (self.ln(x) @ self.token_embedding.weight.T).realize()
+        return (self.ln(x.float()) @ self.token_embedding.weight.T).realize()
 
 
 class Whisper:
@@ -185,6 +185,11 @@ class Whisper:
 
     def __call__(self, mel: Tensor, tokens: Tensor) -> Tensor:
         return self.decoder(tokens, 0, self.encoder(mel))
+
+    def parameters(self):
+        from tinygrad.nn.state import get_parameters
+        yield from get_parameters(self.encoder)
+        yield from get_parameters(self.decoder)
 
     @property
     def device(self):

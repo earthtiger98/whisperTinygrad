@@ -108,7 +108,12 @@ def load_model(
     checkpoint = torch_load(checkpoint_file)
     dims = checkpoint["dims"]
     model = Whisper(dims, batch_size)
-    load_state_dict(model, checkpoint["model_state_dict"], strict=False)
+    # Convert state_dict tensors to float32 before loading
+    converted_state_dict = {}
+    for k, v in checkpoint["model_state_dict"].items():
+        converted_state_dict[k] = v
+
+    load_state_dict(model, converted_state_dict, strict=False)
 
     # Note: alignment_heads functionality not implemented in tinygrad version
     if alignment_heads is not None:

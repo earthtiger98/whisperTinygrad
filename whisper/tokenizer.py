@@ -140,23 +140,7 @@ class Tokenizer:
     special_tokens: Dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self):
-        for special in self.encoding.special_tokens_set:
-            special_token = self.encoding.encode_single_token(special)
-            self.special_tokens[special] = special_token
-
-        sot: int = self.special_tokens["<|startoftranscript|>"]
-        translate: int = self.special_tokens["<|translate|>"]
-        transcribe: int = self.special_tokens["<|transcribe|>"]
-
-        langs = tuple(LANGUAGES.keys())[: self.num_languages]
-        sot_sequence = [sot]
-        if self.language is not None:
-            sot_sequence.append(sot + 1 + langs.index(self.language))
-        if self.task is not None:
-            task_token: int = transcribe if self.task == "transcribe" else translate
-            sot_sequence.append(task_token)
-
-        self.sot_sequence = tuple(sot_sequence)
+        pass
 
     def encode(self, text, **kwargs):
         return self.encoding.encode(text, **kwargs)
@@ -354,13 +338,14 @@ def get_encoding(name: str = "gpt2", num_languages: int = 99):
         special_tokens[token] = n_vocab
         n_vocab += 1
 
-    return tiktoken.Encoding(
-        name=os.path.basename(vocab_path),
+    encoding = tiktoken.Encoding(
+        name="cl100k_im",
         explicit_n_vocab=n_vocab,
         pat_str=r"""'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+""",
         mergeable_ranks=ranks,
         special_tokens=special_tokens,
     )
+    return encoding, special_tokens
 
 
 @lru_cache(maxsize=None)
@@ -388,8 +373,8 @@ def get_tokenizer(
         language = None
         task = None
 
-    encoding = get_encoding(name=encoding_name, num_languages=num_languages)
+    encoding, special_tokens = get_encoding(name=encoding_name, num_languages=num_languages)
 
     return Tokenizer(
-        encoding=encoding, num_languages=num_languages, language=language, task=task
+        encoding=encoding, num_languages=num_languages, language=language, task=task, special_tokens=special_tokens
     )
